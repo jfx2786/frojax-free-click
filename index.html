@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FROJAX FREE CLICK-O-MATIC</title>
+<style>
+  :root{
+    --bg:#0b0b0c;
+    --card:#141417;
+    --gold:#d4af37;
+    --muted:#8a8a8f;
+    --text:#f5f5f7;
+    --ok:#20bf55;
+    --danger:#ff4757;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .wrap{width:100%;max-width:720px;padding:24px}
+  .card{
+    background:var(--card);
+    border:1px solid #202026;
+    border-radius:20px;
+    padding:24px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  h1{
+    margin:0 0 8px 0;
+    text-align:center;
+    letter-spacing:1.5px;
+    font-weight:900;
+    font-size:clamp(22px,4vw,34px);
+    color:var(--gold);
+  }
+  .sub{text-align:center;color:var(--muted);margin-bottom:22px;font-size:clamp(12px,2.4vw,14px)}
+  .indicatorRow{display:flex;align-items:center;justify-content:center;gap:22px;margin:10px 0 18px 0}
+  .pulse{width:clamp(90px,20vw,140px);height:clamp(90px,20vw,140px);border-radius:50%;border:3px solid var(--gold);display:grid;place-items:center;position:relative;overflow:hidden}
+  .pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:0 solid var(--gold);opacity:.0}
+  .pulsing .pulse::after{animation:pulseGlow 600ms ease-out}
+  @keyframes pulseGlow{0%{transform:scale(.9);opacity:.45;border-width:6px}100%{transform:scale(1.25);opacity:0;border-width:0}}
+  .led{width:12px;height:12px;border-radius:50%;background:var(--muted)}
+  .led.on{background:var(--gold);box-shadow:0 0 20px var(--gold)}
+  .bpmBig{display:flex;align-items:baseline;justify-content:center;gap:10px}
+  .bpmValue{font-weight:900;line-height:.9;font-size:clamp(70px,12vw,140px)}
+  .bpmUnit{color:var(--muted);font-size:clamp(14px,2.8vw,18px);letter-spacing:.6px}
+  .controls{display:grid;gap:16px;grid-template-columns:1fr}
+  .row{display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap}
+  label{color:var(--muted);font-size:14px}
+  input[type="range"]{width:min(520px,90%)}
+  .btn{appearance:none;border:0;cursor:pointer;padding:14px 18px;border-radius:14px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#1d1d22;color:#fff;border:1px solid #2a2a33;transition:transform .02s ease, filter .15s ease, background .15s ease}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--gold);color:#151515;border-color:#000}
+  .btn.success{background:var(--ok)}
+  .btn.ghost{background:transparent;border-color:#2a2a33;color:#ddd}
+  .btn.block{width:100%}
+  .pill{padding:8px 12px;border-radius:999px;border:1px solid #2a2a33;color:#ddd;background:transparent;font-size:13px}
+  .accents{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+  .accentBtn{width:42px;height:42px;border-radius:10px;border:1px solid #2a2a33;background:#1a1a20;color:#ddd;font-weight:800;cursor:pointer;transition:filter .15s ease, transform .02s ease}
+  .accentBtn.on{background:var(--gold);color:#141417;border-color:#000}
+  .accentLabel{text-align:center;margin-top:4px;color:var(--muted);font-size:12px}
+  details{margin-top:10px;border-top:1px solid #1f1f24;padding-top:14px}
+  summary{cursor:pointer;color:var(--gold);font-weight:800}
+  details p{color:#cfcfd6;margin-top:10px;line-height:1.5}
+  .trainer{display:grid;gap:12px;margin-top:8px;justify-items:center}
+  .kv{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+  .kv input[type="number"]{width:96px;background:#111;border:1px solid #2a2a33;color:#fff;padding:8px 10px;border-radius:10px;font-weight:700;text-align:center}
+  .muted{color:var(--muted);font-size:12px}
+  .center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card center">
+    <h1>FROJAX FREE CLICK-O-MATIC</h1>
+    <div class="sub">Metrónomo simple, claro y centrado.</div>
+
+    <div id="indicator" class="indicatorRow">
+      <div class="pulse"><div id="led" class="led"></div></div>
+      <div class="bpmBig">
+        <div id="bpmValue" class="bpmValue">120</div>
+        <div class="bpmUnit">BPM</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="row">
+        <label for="bpm">Tempo</label>
+        <input id="bpm" type="range" min="30" max="240" value="120" />
+      </div>
+
+      <div class="row">
+        <button id="startStop" class="btn primary">Iniciar</button>
+        <button id="backTo120" class="btn ghost">Regresar a 120 BPM</button>
+      </div>
+
+      <div class="row" style="margin-top:4px;flex-direction:column;">
+        <div class="accentLabel">Acentos</div>
+        <div id="accents" class="accents" aria-label="Acentos del compás"></div>
+        <div class="row">
+          <label>Beats/Compás</label>
+          <button id="beatsMinus" class="pill">−</button>
+          <span id="beatsCount" class="pill">4</span>
+          <button id="beatsPlus" class="pill">＋</button>
+        </div>
+      </div>
+
+      <div class="trainer">
+        <div class="accentLabel">Entrenador (rampa de BPM)</div>
+        <div class="kv">
+          <label for="startBpm">Inicio</label>
+          <input id="startBpm" type="number" min="30" max="240" value="80" />
+          <label for="endBpm">Final</label>
+          <input id="endBpm" type="number" min="30" max="240" value="140" />
+          <label for="durationSec">Duración (s)</label>
+          <input id="durationSec" type="number" min="10" max="3600" value="120" />
+        </div>
+        <div class="row">
+          <button id="trainerToggle" class="btn">Entrenador: OFF</button>
+        </div>
+        <div class="muted">Muestra BPM de inicio y final mientras corre.</div>
+      </div>
+
+      <details>
+        <summary>Explicación</summary>
+        <p>
+          Presiona <b>Iniciar</b> para comenzar. Ajusta el <b>tempo</b> con el control deslizante.
+          Usa <b>Acentos</b> para resaltar golpes dentro del compás. El <b>Entrenador</b> permite
+          empezar en un BPM y terminar en otro durante una duración definida.
+        </p>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+let audioCtx, clickHi, clickLo, timerId=null, isRunning=false;
+let bpm = 120;
+let beatIndex = 0;
+let beatsPerBar = 4;
+let accents = [true,false,false,false];
+
+const bpmSlider=document.getElementById('bpm');
+const bpmValue=document.getElementById('bpmValue');
+const startStop=document.getElementById('startStop');
+const backTo120=document.getElementById('backTo120');
+const led=document.getElementById('led');
+const indicator=document.getElementById('indicator');
+const beatsMinus=document.getElementById('beatsMinus');
+const beatsPlus=document.getElementById('beatsPlus');
+const beatsCount=document.getElementById('beatsCount');
+const accentsWrap=document.getElementById('accents');
+const startBpmEl=document.getElementById('startBpm');
+const endBpmEl=document.getElementById('endBpm');
+const durationEl=document.getElementById('durationSec');
+const trainerBtn=document.getElementById('trainerToggle');
+
+let trainerOn=false,trainerStartTS=0,trainerDuration=0,trainerStartBpm=80,trainerEndBpm=140;
+
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    clickHi=makeClickBuffer(2000);
+    clickLo=makeClickBuffer(1300);
+  }
+}
+function makeClickBuffer(freq){
+  const dur=0.03,sr=audioCtx.sampleRate,len=Math.floor(dur*sr);
+  const buf=audioCtx.createBuffer(1,len,sr),data=buf.getChannelData(0);
+  for(let i=0;i<len;i++){
+    const env=Math.exp(-i/(len*0.35));
+    data[i]=Math.sign(Math.sin(2*Math.PI*freq*(i/sr)))*env*0.6;
+  }
+  return buf;
+}
+function play(buf){const src=audioCtx.createBufferSource();src.buffer=buf;const g=audioCtx.createGain();g.gain.value=0.9;src.connect(g).connect(audioCtx.destination);src.start();}
+function setBpm(val){bpm=Math.max(30,Math.min(240,Math.round(val)));bpmSlider.value=bpm;bpmValue.textContent=bpm;}
+function renderAccents(){
+  accentsWrap.innerHTML="";
+  for(let i=0;i<beatsPerBar;i++){
+    const b=document.createElement('button');
+    b.className='accentBtn'+(accents[i]?' on':'');b.textContent=(i+1);
+    b.onclick=()=>{accents[i]=!accents[i];renderAccents();};
+    accentsWrap.appendChild(b);
+  }
+  beatsCount.textContent=String(beatsPerBar);
+}
+function setBeats(n){
+  beatsPerBar=Math.max(1,Math.min(12,n));
+  const next=new Array(beatsPerBar).fill(false);
+  for(let i=0;i<Math.min(accents.length,beatsPerBar);i++) next[i]=accents[i];
+  if(!next.some(Boolean)) next[0]=true;
+  accents=next;beatIndex=0;renderAccents();
+}
+function flash(){led.classList.add('on');indicator.classList.add('pulsing');setTimeout(()=>{led.classList.remove('on');indicator.classList.remove('pulsing');},120);}
+function tick(){
+  if(trainerOn){
+    const elapsed=(audioCtx.currentTime-trainerStartTS);
+    const t=Math.min(1,elapsed/trainerDuration);
+    const cur=trainerStartBpm+(trainerEndBpm-trainerStartBpm)*t;
+    setBpm(cur);
+    if(t>=1){trainerOn=false;trainerBtn.textContent='Entrenador: OFF';}
+  }
+  play(accents[beatIndex]?clickHi:clickLo);
+  flash();
+  beatIndex=(beatIndex+1)%beatsPerBar;
+  timerId=setTimeout(tick,60000/bpm);
+}
+function start(){ensureAudio();if(isRunning)return;isRunning=true;startStop.textContent='Detener';tick();}
+function stop(){isRunning=false;startStop.textContent='Iniciar';clearTimeout(timerId);timerId=null;beatIndex=0;}
+bpmSlider.oninput=e=>setBpm(e.target.value);
+startStop.onclick=()=>isRunning?stop():start();
+backTo120.onclick=()=>setBpm(120);
+beatsMinus.onclick=()=>setBeats(beatsPerBar-1);
+beatsPlus.onclick=()=>setBeats(beatsPerBar+1);
+trainerBtn.onclick=()=>{
+  trainerOn=!trainerOn;
+  if(trainerOn){
+    ensureAudio();
+    trainerStartBpm=Number(startBpmEl.value)||80;
+    trainerEndBpm=Number(endBpmEl.value)||140;
+    trainerDuration=Math.max(1,Number(durationEl.value)||120);
+    trainerStartTS=audioCtx.currentTime;
+    trainerBtn.textContent='Entrenador: ON';
+    if(!isRunning) start();
+  } else trainerBtn.textContent='Entrenador: OFF';
+};
+setBpm(120);setBeats(4);
+</script>
+</body>
+</html>
