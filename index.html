@@ -140,7 +140,98 @@
 </div>
 
 <script>
-/* identical JS as previous version */
+let audioCtx, clickHi, clickLo, timerId=null, isRunning=false;
+let bpm = 120;
+let beatIndex = 0;
+let beatsPerBar = 4;
+let accents = [true,false,false,false];
+
+const bpmSlider=document.getElementById('bpm');
+const bpmValue=document.getElementById('bpmValue');
+const startStop=document.getElementById('startStop');
+const backTo120=document.getElementById('backTo120');
+const led=document.getElementById('led');
+const indicator=document.getElementById('indicator');
+const beatsMinus=document.getElementById('beatsMinus');
+const beatsPlus=document.getElementById('beatsPlus');
+const beatsCount=document.getElementById('beatsCount');
+const accentsWrap=document.getElementById('accents');
+const startBpmEl=document.getElementById('startBpm');
+const endBpmEl=document.getElementById('endBpm');
+const durationEl=document.getElementById('durationSec');
+const trainerBtn=document.getElementById('trainerToggle');
+
+let trainerOn=false,trainerStartTS=0,trainerDuration=0,trainerStartBpm=80,trainerEndBpm=140;
+
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    clickHi=makeClickBuffer(2000);
+    clickLo=makeClickBuffer(1300);
+  }
+}
+function makeClickBuffer(freq){
+  const dur=0.03,sr=audioCtx.sampleRate,len=Math.floor(dur*sr);
+  const buf=audioCtx.createBuffer(1,len,sr),data=buf.getChannelData(0);
+  for(let i=0;i<len;i++){
+    const env=Math.exp(-i/(len*0.35));
+    data[i]=Math.sign(Math.sin(2*Math.PI*freq*(i/sr)))*env*0.6;
+  }
+  return buf;
+}
+function play(buf){const src=audioCtx.createBufferSource();src.buffer=buf;const g=audioCtx.createGain();g.gain.value=0.9;src.connect(g).connect(audioCtx.destination);src.start();}
+function setBpm(val){bpm=Math.max(30,Math.min(240,Math.round(val)));bpmSlider.value=bpm;bpmValue.textContent=bpm;}
+function renderAccents(){
+  accentsWrap.innerHTML="";
+  for(let i=0;i<beatsPerBar;i++){
+    const b=document.createElement('button');
+    b.className='accentBtn'+(accents[i]?' on':'');b.textContent=(i+1);
+    b.onclick=()=>{accents[i]=!accents[i];renderAccents();};
+    accentsWrap.appendChild(b);
+  }
+  beatsCount.textContent=String(beatsPerBar);
+}
+function setBeats(n){
+  beatsPerBar=Math.max(1,Math.min(12,n));
+  const next=new Array(beatsPerBar).fill(false);
+  for(let i=0;i<Math.min(accents.length,beatsPerBar);i++) next[i]=accents[i];
+  if(!next.some(Boolean)) next[0]=true;
+  accents=next;beatIndex=0;renderAccents();
+}
+function flash(){led.classList.add('on');indicator.classList.add('pulsing');setTimeout(()=>{led.classList.remove('on');indicator.classList.remove('pulsing');},120);}
+function tick(){
+  if(trainerOn){
+    const elapsed=(audioCtx.currentTime-trainerStartTS);
+    const t=Math.min(1,elapsed/trainerDuration);
+    const cur=trainerStartBpm+(trainerEndBpm-trainerStartBpm)*t;
+    setBpm(cur);
+    if(t>=1){trainerOn=false;trainerBtn.textContent='Entrenador: OFF';}
+  }
+  play(accents[beatIndex]?clickHi:clickLo);
+  flash();
+  beatIndex=(beatIndex+1)%beatsPerBar;
+  timerId=setTimeout(tick,60000/bpm);
+}
+function start(){ensureAudio();if(isRunning)return;isRunning=true;startStop.textContent='Detener';tick();}
+function stop(){isRunning=false;startStop.textContent='Iniciar';clearTimeout(timerId);timerId=null;beatIndex=0;}
+bpmSlider.oninput=e=>setBpm(e.target.value);
+startStop.onclick=()=>isRunning?stop():start();
+backTo120.onclick=()=>setBpm(120);
+beatsMinus.onclick=()=>setBeats(beatsPerBar-1);
+beatsPlus.onclick=()=>setBeats(beatsPerBar+1);
+trainerBtn.onclick=()=>{
+  trainerOn=!trainerOn;
+  if(trainerOn){
+    ensureAudio();
+    trainerStartBpm=Number(startBpmEl.value)||80;
+    trainerEndBpm=Number(endBpmEl.value)||140;
+    trainerDuration=Math.max(1,Number(durationEl.value)||120);
+    trainerStartTS=audioCtx.currentTime;
+    trainerBtn.textContent='Entrenador: ON';
+    if(!isRunning) start();
+  } else trainerBtn.textContent='Entrenador: OFF';
+};
+setBpm(120);setBeats(4);
 </script>
 </body>
 </html>
